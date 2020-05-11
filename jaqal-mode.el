@@ -13,14 +13,17 @@
   )
 
 (defconst jaqal-font-lock-keywords-1
-  (list
-   ;; Header keywords must come at the beginning of a line
-   (cons (regexp-opt '("register" "map" "let") "^\\(") font-lock-keyword-face)
-   ;; These keywords can be inside a block
-   (cons (regexp-opt '("loop" "macro")) font-lock-keyword-face)
-   (cons (regexp-opt '("register" "map" "let")) font-lock-warning-face)
-   '("\\<-?[0-9]+\\.?[0-9]*\\(\\(e\\|E\\)-?[0-9]+\\)?\\>" . font-lock-constant-face)
-   ))
+  (let ((header-keywords '("register" "map" "let" "from"))
+	(other-keywords '("loop" "macro" "usepulses")))
+    (list
+     ;; Header keywords must come at the beginning of a line
+     (cons (regexp-opt header-keywords "^\\(") font-lock-keyword-face)
+     ;; These keywords need not be at the beginning of a line
+     (cons (regexp-opt other-keywords) font-lock-keyword-face)
+     ;; Make header keywords noticeable when inside a block.
+     (cons (regexp-opt header-keywords) font-lock-warning-face)
+     '("\\<-?[0-9]+\\.?[0-9]*\\(\\(e\\|E\\)-?[0-9]+\\)?\\>" . font-lock-constant-face)
+     )))
 
 (defvar jaqal-font-lock-keywords jaqal-font-lock-keywords-1
   "Default highlighting expressions for Jaqal mode")

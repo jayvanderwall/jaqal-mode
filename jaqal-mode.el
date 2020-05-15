@@ -92,9 +92,10 @@
       (let ((gatepulse-file (jaqal-find-gatepulse-file (elt gatepulse-list 0)))
 	    (gatepulse-class (elt gatepulse-list 1)))
 	(when gatepulse-file
-	  (when (find-file-other-window gatepulse-file)
-	    (let ((identifier (jaqal-identifier-at-point)))
-	      (jaqal-search-gate gatepulse-class identifier))))))))
+	  (let ((identifier (jaqal-identifier-at-point)))
+	    (when (find-file-other-window gatepulse-file)
+	      (when identifier
+		(jaqal-search-gate gatepulse-class identifier)))))))))
 
 (defun jaqal-identifier-at-point ()
   "Return the identifier surrounding the point or nil"

@@ -64,6 +64,61 @@
 	  (max 0 (+ acc close-offset open-offset)))))
     (seq-reduce #'bracket-acc (reverse str) 0)))
 
+(defun jaqal-goto-gatepulse-file ()
+  "Open the gatepulse file and go to the gate at the point"
+  (interactive))
+
+(defun jaqal-parse-gatepulse ()
+  "Return the gatepulse filename and class from the usepulses statement in this file"
+  (save-mark-and-excursion
+   (goto-char (point-min))
+   (when (re-search-forward "^[[:blank:]]*from[[:blank:]]\\([[:alnum:]]+\\)\\.\\([[:alnum:]]+\\)[[:blank:]]+usepulses[[:blank:]]+\\*" nil t)
+     (list (concat (match-string-no-properties 1) ".py") (match-string-no-properties 2)))))
+
+(defun jaqal-find-gatepulse-file (filename &optional base-directory)
+  "Find a gatepulse file starting with the given directory"
+  (when filename
+    (let* ((base-directory (or base-directory default-directory))
+	   ;; add $ to the regexp to avoid things like file.py~
+	   (all-files (directory-files-recursively base-directory (concat (regexp-quote filename) "$"))))
+      (when all-files
+	(car (last all-files))))))
+
+(defun jaqal-goto-gatepulse-file ()
+  "Open the gatepulse file for this Jaqal file in another window"
+  (interactive)
+  (let ((gatepulse-list (jaqal-parse-gatepulse)))
+    (when gatepulse-list
+      (let ((gatepulse-file (jaqal-find-gatepulse-file (elt gatepulse-list 0)))
+	    (gatepulse-class (elt gatepulse-list 1)))
+	(when gatepulse-file
+	  (when (find-file-other-window gatepulse-file)
+	    (let ((identifier (jaqal-identifier-at-point)))
+	      (jaqal-search-gate gatepulse-class identifier))))))))
+
+(defun jaqal-identifier-at-point ()
+  "Return the identifier surrounding the point or nil"
+  (save-mark-and-excursion
+   (let ((ident-regexp "[[:alnum:]_]"))
+     (skip-chars-backward "[[:alnum:]_]")
+     (when (looking-at "[[:alpha:]_][[:alnum:]_]*")
+       (match-string-no-properties 0)))))
+
+(defun jaqal-search-gate (class identifier)
+  "Find the given gate in the current buffer"
+  (let ((gate-name (concat "gate_" identifier)))
+    ;; We have to go a bit out of our way to not change the point and
+    ;; mark if the gate does not exist.
+    (let ((pos (save-mark-and-excursion
+		(goto-char (point-min))
+		(let ((search-start (re-search-forward (concat "^class[[:blank:]]+" class) nil t)))
+		  (when search-start
+		    (let ((search-end (or (re-search-forward "^class" nil t) (point-max))))
+		      (goto-char search-start)
+		      (re-search-forward gate-name search-end t)))))))
+      (when pos
+	(goto-char pos)))))
+
 (defun jaqal-indent-line ()
   "Indent current line of Jaqal code"
   (interactive)

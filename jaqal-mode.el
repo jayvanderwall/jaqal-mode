@@ -1,10 +1,9 @@
-;; -*- lexical-binding: t; -*-
 ;; Jaqal syntax highlighting and indentation major mode
 
 (require 'cl-lib)
 (require 'seq)
 
-(defvar jaqal-mode-version "1.1.0")
+(defvar jaqal-mode-version "1.0.1")
 
 (defvar jaqal-indent-width 2)
 
@@ -64,42 +63,6 @@
 	  ; iterate in reverse) are not counted
 	  (max 0 (+ acc close-offset open-offset)))))
     (seq-reduce #'bracket-acc (reverse str) 0)))
-
-(defun jaqal-goto-gatepulse-file ()
-  "Open the gatepulse file corresponding to this Jaqal file in another buffer"
-  (interactive)
-  (let* ((file-class (jaqal-find-gatepulse-declaration))
-	 (gatepulse-file (jaqal-lookup-gatepulse-file (elt file-class 0)))
-	 (gatepulse-class (elt file-class 1)))
-    (when gatepulse-file
-      (select-window
-       (display-buffer (find-file-noselect gatepulse-file))))))
-
-(defun jaqal-find-gatepulse-declaration ()
-  "Find the gatepulse declaration in the current file and return the text of that line or nil"
-  (save-mark-and-excursion
-   (goto-char (point-min))
-   (let ((line nil) (match nil))
-     (while (not match)
-       (setf line (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
-       (setf match (jaqal-parse-gatepulse-file-and-class line))
-       (when (not match) (forward-line)))
-     match)))
-
-(defun jaqal-parse-gatepulse-file-and-class (line)
-  "Return the gatepulse file and the class within that file in a list or nil if not found"
-  (when line
-    (let ((gp-regex "^[[:blank:]]*from[[:blank:]]+\\([[:alnum:]]+\\)\\.\\([[:alnum:]]+\\)[[:blank:]]+usepulses[[:blank:]]+\\*[[:blank:]]*$") )
-      (when (string-match gp-regex line)
-	(list
-	 (concat (substring-no-properties line (match-beginning 1) (match-end 1)) ".py")
-	 (substring-no-properties line (match-beginning 2) (match-end 2)))))))
-
-(defun jaqal-lookup-gatepulse-file (filename &optional dir)
-  "Return the full path of the gatepulse file or nil if not found"
-  (let* ((start-dir (or dir default-directory))
-	 (all-matches (directory-files-recursively start-dir (regexp-quote filename))))
-    (car (last all-matches))))
 
 (defun jaqal-indent-line ()
   "Indent current line of Jaqal code"

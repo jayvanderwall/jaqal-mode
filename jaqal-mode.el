@@ -187,6 +187,8 @@
   (use-local-map jaqal-keymap)
 
   (setq indent-tabs-mode nil)
+  (setq comment-start "//")
+  (setq comment-padding " ")
 
   (setq major-mode 'jaqal-mode)
   (setq mode-name "Jaqal")

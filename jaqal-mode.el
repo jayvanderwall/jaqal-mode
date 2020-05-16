@@ -64,10 +64,6 @@
 	  (max 0 (+ acc close-offset open-offset)))))
     (seq-reduce #'bracket-acc (reverse str) 0)))
 
-(defun jaqal-goto-gatepulse-file ()
-  "Open the gatepulse file and go to the gate at the point"
-  (interactive))
-
 (defun jaqal-parse-gatepulse ()
   "Return the gatepulse filename and class from the usepulses statement in this file"
   (save-mark-and-excursion
@@ -84,18 +80,23 @@
       (when all-files
 	(car (last all-files))))))
 
-(defun jaqal-goto-gatepulse-file ()
-  "Open the gatepulse file for this Jaqal file in another window"
+(defun jaqal-goto-gate-definition ()
+  "Find the definition for the gate at the point and go to it"
   (interactive)
-  (let ((gatepulse-list (jaqal-parse-gatepulse)))
-    (when gatepulse-list
-      (let ((gatepulse-file (jaqal-find-gatepulse-file (elt gatepulse-list 0)))
-	    (gatepulse-class (elt gatepulse-list 1)))
-	(when gatepulse-file
-	  (let ((identifier (jaqal-identifier-at-point)))
-	    (when (find-file-other-window gatepulse-file)
-	      (when identifier
-		(jaqal-search-gate gatepulse-class identifier)))))))))
+  (let* ((identifier (jaqal-identifier-at-point))
+	 (macros (jaqal-find-all-nocomment (concat "macro[[:blank:]]+" identifier))))
+    (if (and identifier macros)
+	(progn
+	  (push-mark nil t)
+	  (goto-char (car macros)))
+      (let ((gatepulse-list (jaqal-parse-gatepulse)))
+	(when gatepulse-list
+	  (let ((gatepulse-file (jaqal-find-gatepulse-file (elt gatepulse-list 0)))
+		(gatepulse-class (elt gatepulse-list 1)))
+	    (when gatepulse-file
+	      (when (find-file-other-window gatepulse-file)
+		(when identifier
+		  (jaqal-search-gate gatepulse-class identifier))))))))))
 
 (defun jaqal-identifier-at-point ()
   "Return the identifier surrounding the point or nil"
@@ -119,8 +120,9 @@
       (when pos
 	(goto-char pos)))))
 
-(defun jaqal-find-all-nocomment (regexp start end)
+(defun jaqal-find-all-nocomment (regexp &optional start end)
   "Find all instances of this regular expression that do not contain comments. Last element is head of the list."
+  (setf start (or start (point-min)) end (or end (point-max)))
   (save-mark-and-excursion
    (goto-char start)
    (let ((ret nil))
@@ -185,7 +187,7 @@
   "Syntax table for Jaqal mode")
 
 (defvar jaqal-keymap (make-sparse-keymap))
-(define-key jaqal-keymap (kbd "C-c C-d") #'jaqal-goto-gatepulse-file)
+(define-key jaqal-keymap (kbd "C-c C-d") #'jaqal-goto-gate-definition)
 
 (defun jaqal-mode ()
   "Major mode for editing Jaqal quantum assembly files"

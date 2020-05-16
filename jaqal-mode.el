@@ -115,10 +115,20 @@
 		(let ((search-start (re-search-forward (concat "^class[[:blank:]]+" class) nil t)))
 		  (when search-start
 		    (let ((search-end (or (re-search-forward "^class" nil t) (point-max))))
-		      (goto-char search-start)
-		      (re-search-forward gate-name search-end t)))))))
+		      (car (jaqal-find-all-nocomment gate-name search-start search-end))))))))
       (when pos
 	(goto-char pos)))))
+
+(defun jaqal-find-all-nocomment (regexp start end)
+  "Find all instances of this regular expression that do not contain comments. Last element is head of the list."
+  (save-mark-and-excursion
+   (goto-char start)
+   (let ((ret nil))
+     (while (re-search-forward regexp end t)
+       (let ((match (match-string 0)))
+	 (when (not (text-property-any 0 (length match) 'face 'font-lock-comment-face match))
+	   (push (match-beginning 0) ret))))
+     ret)))
 
 (defun jaqal-indent-line ()
   "Indent current line of Jaqal code"

@@ -3,7 +3,7 @@
 (require 'cl-lib)
 (require 'seq)
 
-(defvar jaqal-mode-version "1.0.1")
+(defvar jaqal-mode-version "1.1.0")
 
 (defvar jaqal-indent-width 2)
 
@@ -174,6 +174,9 @@
     st)
   "Syntax table for Jaqal mode")
 
+(defvar jaqal-keymap (make-sparse-keymap))
+(define-key jaqal-keymap (kbd "C-c C-d") #'jaqal-goto-gatepulse-file)
+
 (defun jaqal-mode ()
   "Major mode for editing Jaqal quantum assembly files"
   (interactive)
@@ -181,6 +184,7 @@
   (set (make-local-variable 'font-lock-defaults) '(jaqal-font-lock-keywords))
   (set-syntax-table jaqal-mode-syntax-table)
   (set (make-local-variable 'indent-line-function) 'jaqal-indent-line)
+  (use-local-map jaqal-keymap)
 
   (setq indent-tabs-mode nil)
 
